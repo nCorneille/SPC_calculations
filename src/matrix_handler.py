@@ -1,15 +1,16 @@
 import numpy as np
+from scipy import optimize
 import csv
 
 
-def read_model(filename, d):
+def read_model(filename: str) -> np.array:
     """
-    Credits to Mariia Turchina (https://github.com/thatmariia/stochastic-modelling/blob/master/model_python/ModelsSetup.py)
+    Code based on function written by Mariia Turchina
+    (https://github.com/thatmariia/stochastic-modelling/blob/master/model_python/ModelsSetup.py)
 
-    Reads and evaluates matrix from .csv file
+    Reads a matrix from .csv file
     :param filename: string - .csv location
-    :param d: map from variables to values
-    :return: square probability matrix evaluated with values at d
+    :return: square probability matrix with variable names
     """
     filename += ".csv"
 
@@ -31,20 +32,63 @@ def read_model(filename, d):
         for row in reader:
             model_row = []
             for cell in row:
-                model_cell = eval(cell, d)
-                model_row.append(model_cell)
+                # model_cell = eval(cell, d)
+                model_row.append(cell)
             model_matrix.append(np.array(model_row))
 
     return np.array(model_matrix)
 
 
-class MarkovChainModel:
-    def __init__(self, params, matrix_path):
-        self.params = params
-        self.matrix = read_model(matrix_path, params)
+def evaluate_model(matrix: np.array, params: dict) -> np.matrix:
+    """
+    Code based on function written by Mariia Turchina
+    (https://github.com/thatmariia/stochastic-modelling/blob/master/model_python/ModelsSetup.py)
 
-    def find_control_limit(self, target_ARL):
+    Reads a matrix from .csv file
+    :param matrix: np.array[np.array[string]] - matrix of variable names
+    :param params: map from variable names to values
+    :return: square probability matrix evaluated with values at params
+    """
+
+    model_matrix = []
+
+    for row in matrix:
+        model_row = []
+        for cell in row:
+            model_cell = eval(cell, params)
+            model_row.append(model_cell)
+        model_matrix.append(np.array(model_row))
+
+    return np.asmatrix(np.array(model_matrix))
+
+
+class MarkovChainModel:
+    def __init__(self, matrix_path):
+        self.matrix = read_model(matrix_path)
+        self.dim = self.matrix.shape[0]
+
+    def calculate_params(self, k: float) -> dict:
         pass
 
+    def calculate_ARL(self, k: float) -> float:
+        """
+        Calculates the ARL for a given k
+        :param k: k such that the OC interval is R - [mu - k sigma, mu + k sigma]
+        :return: Average Run Length for given k
+        """
+        identity_minus_matrix = np.linalg.inv(
+            np.identity(self.dim) - evaluate_model(self.matrix, self.calculate_params(k)))
 
+        return np.eye(1, self.dim, 0) @ identity_minus_matrix @ np.ones(self.dim)
 
+    def find_control_limit(self, target_ARL: float, epsilon: float = 0.001) -> float:
+        """
+        Find a value k for which calculate_ARL is approximately target_ARL
+        :param target_ARL: The value we wish for calculate_ARL to have
+        :param epsilon: Tolerance of the root-finding
+        :return: A floating point value such that |target_ARL - calculate_ARL| < epsilon
+        """
+        output = optimize.root_scalar(lambda k: self.calculate_ARL(k) - target_ARL,
+                                      bracket=[0.2, 5], x0=3, xtol=epsilon)
+
+        return output.root
