@@ -3,13 +3,14 @@ from scipy import optimize
 import csv
 
 
-def read_model(filename: str) -> np.array:
+def read_model(filename: str, params: dict) -> np.array:
     """
     Code based on function written by Mariia Turchina
     (https://github.com/thatmariia/stochastic-modelling/blob/master/model_python/ModelsSetup.py)
 
     Reads a matrix from .csv file
     :param filename: string - .csv location
+    :param params: dictionary[string] - expresses elements of csv in terms of {mu, sigma, k}
     :return: square probability matrix with variable names
     """
     filename += ".csv"
@@ -32,6 +33,8 @@ def read_model(filename: str) -> np.array:
         for row in reader:
             model_row = []
             for cell in row:
+                for key in params.keys():
+                    cell = cell.replace(key, params[key])
                 # model_cell = eval(cell, d)
                 model_row.append(cell)
             model_matrix.append(np.array(model_row))
@@ -63,12 +66,14 @@ def evaluate_model(matrix: np.array, params: dict) -> np.matrix:
 
 
 class MarkovChainModel:
-    def __init__(self, matrix_path):
-        self.matrix = read_model(matrix_path)
+    def __init__(self, matrix_path, params, values):
+        self.params = params
+        self.values = values
+        self.matrix = read_model(matrix_path, params)
         self.dim = self.matrix.shape[0]
 
-    def calculate_params(self, k: float) -> dict:
-        pass
+    def calculate_values(self, k: float) -> dict:
+        return dict({"k": k}, **self.values.copy())
 
     def calculate_ARL(self, k: float) -> float:
         """
@@ -76,10 +81,10 @@ class MarkovChainModel:
         :param k: k such that the OC interval is R - [mu - k sigma, mu + k sigma]
         :return: Average Run Length for given k
         """
-        identity_minus_matrix = np.linalg.inv(
-            np.identity(self.dim) - evaluate_model(self.matrix, self.calculate_params(k)))
+        identity_minus_matrix_inv = np.linalg.inv(
+            np.identity(self.dim) - evaluate_model(self.matrix, self.calculate_values(k)))
 
-        return np.eye(1, self.dim, 0) @ identity_minus_matrix @ np.ones(self.dim)
+        return (np.eye(1, self.dim, 0) @ identity_minus_matrix_inv @ np.ones(self.dim)).item()
 
     def find_control_limit(self, target_ARL: float, epsilon: float = 0.001) -> float:
         """
