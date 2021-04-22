@@ -67,6 +67,14 @@ def evaluate_model(matrix: np.array, params: dict) -> np.matrix:
 
 class MarkovChainModel:
     def __init__(self, matrix_path, params, values):
+        """
+        :param matrix_path: Path to file containing matrix
+        :param params: Dictionary converting values inside matrix to ways to calculate them e.g. {"p0": "phi(k)-phi(-k)"}
+        :param values: Dictionary for evaluating the values of params e.g. {"phi": stats.norm.cdf}
+
+        IMPORTANT: "k" is reserved for calculations involving control limits and can therefore not be
+        passed as a key of values
+        """
         self.params = params
         self.values = values
         self.matrix = read_model(matrix_path, params)
