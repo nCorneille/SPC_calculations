@@ -19,7 +19,8 @@ def main():
     r = 1
     CCC_model = MarkovChainModel(prev_dir + "matrix_CCC_no-trends",
                                  # TODO: cdf(k) should be cdf(LCL), with LCL = f(k)
-                                 {"p(X=m)": "pmf(median)", "p(X>m)": "1-cdf(median)", "p(l<X<m)": "cdf(median-1)-cdf(k)"},
+                                 {"p(X=m)": "pmf(median)", "p(X>m)": "1-cdf(median)",
+                                  "p(l<X<m)": "cdf(median-1)-cdf(k)"},
                                  {"median": 3, "pmf": lambda k: stats.nbinom.pmf(k, r, p),
                                   "cdf": lambda k: stats.nbinom.cdf(k, r, p)})
 
