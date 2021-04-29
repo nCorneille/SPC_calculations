@@ -1,6 +1,9 @@
 import os
+
+import numpy as np
 from scipy import stats
 
+from simulation_handler import SimulationHandler
 from src.matrix_handler import MarkovChainModel
 
 
@@ -27,6 +30,14 @@ def main():
     print("C2 ARL: {}".format(C2_model.calculate_ARL(3)))
     print("no RR ARL: {}".format(test_model.calculate_ARL(3)))
     print("CCC model no trends: {}".format(CCC_model.calculate_ARL(3)))
+
+    test_simulation = SimulationHandler(lambda data, LCL, UCL: np.logical_or(data <= LCL, data >= UCL), [], -3, 3)
+
+    n = []
+    for i in range(20000):
+        n.append(test_simulation.simulate(lambda x: np.random.normal(0,1,x), 10000))
+
+    print(np.mean(n))
 
 
 if __name__ == "__main__":
