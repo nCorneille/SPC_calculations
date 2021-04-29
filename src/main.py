@@ -3,9 +3,8 @@ import os
 import numpy as np
 from scipy import stats
 
-from simulation_handler import SimulationHandler
+from simulation_handler import *
 from src.matrix_handler import MarkovChainModel
-
 
 def main():
     prev_dir = os.path.dirname(__file__) + "/../"
@@ -31,7 +30,7 @@ def main():
     print("no RR ARL: {}".format(test_model.calculate_ARL(3)))
     print("CCC model no trends: {}".format(CCC_model.calculate_ARL(3)))
 
-    test_simulation = SimulationHandler(lambda data, LCL, UCL: np.logical_or(data <= LCL, data >= UCL), [], -3, 3)
+    test_simulation = SimulationHandler([double_sided_CI_rule], -3, 3)
 
     n = []
     for i in range(20000):
