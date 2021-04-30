@@ -81,8 +81,14 @@ class MarkovChainModel:
         self.matrix = read_model(matrix_path, params)
         self.dim = self.matrix.shape[0]
 
-    def calculate_values(self, k: float) -> dict:
-        return dict({"k": k}, **self.values.copy())
+    def add_k_to_values(self, k: float) -> dict:
+        """
+        Returns the union of self.values and {"k": k}
+
+        :param k: a float
+        :return: {"k": k} U self.values
+        """
+        return dict({"k": k}, **self.values)
 
     def calculate_ARL(self, k: float) -> float:
         """
@@ -92,7 +98,7 @@ class MarkovChainModel:
         :return: Average Run Length for given k
         """
         identity_minus_matrix_inv = np.linalg.inv(
-            np.identity(self.dim) - evaluate_model(self.matrix, self.calculate_values(k)))
+            np.identity(self.dim) - evaluate_model(self.matrix, self.add_k_to_values(k)))
 
         return (np.eye(1, self.dim, 0) @ identity_minus_matrix_inv @ np.ones(self.dim)).item()
 
@@ -100,7 +106,7 @@ class MarkovChainModel:
         """
         Find a value k for which calculate_ARL is approximately target_ARL.
 
-        :param target_ARL: The value we wish for calculate_ARL to have
+        :param target_ARL: The value we wish for self.calculate_ARL to have
         :param epsilon: Tolerance of the root-finding
         :return: A floating point value such that |target_ARL - calculate_ARL| < epsilon
         """

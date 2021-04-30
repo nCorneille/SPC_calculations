@@ -1,10 +1,11 @@
 import os
 
-import numpy as np
 from scipy import stats
 
-from simulation_handler import *
+from src.simulation_handler import *
 from src.matrix_handler import MarkovChainModel
+from src.runs_rules import *
+
 
 def main():
     prev_dir = os.path.dirname(__file__) + "/../"
@@ -30,11 +31,12 @@ def main():
     print("no RR ARL: {}".format(test_model.calculate_ARL(3)))
     print("CCC model no trends: {}".format(CCC_model.calculate_ARL(3)))
 
-    test_simulation = SimulationHandler([double_sided_CI_rule], -3, 3)
+    test_simulation = SimulationHandler([lambda x: double_sided_CI_rule(x, test_simulation.LCL, test_simulation.UCL)],
+                                        -3, 3)
 
     n = []
     for i in range(20000):
-        n.append(test_simulation.simulate(lambda x: np.random.normal(0,1,x), 10000))
+        n.append(test_simulation.simulate(lambda x: np.random.normal(0, 1, x), 10000))
 
     print(np.mean(n))
 

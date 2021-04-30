@@ -1,14 +1,10 @@
-Matrix Handler
-==============
+src
+===
 
-.. automodule:: src.matrix_handler
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: src.simulation_handler
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
+   main
+   matrix_handler
+   runs_rules
+   simulation_handler
