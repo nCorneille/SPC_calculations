@@ -60,13 +60,18 @@ def runs_rule_test():
 
 
 def simulation_CCC_charts():
-    r = 2
-    p = 0.05
-    p_tilde = 0.06
+    r = 4
+    p = 0.005
+    p_tilde = 0.008
     changepoint = -1
 
-    median = 14
-    sd = np.sqrt(p*r)/(1-p)
+    median = 0
+    while stats.nbinom.cdf(median, r, p) - 1 / 2 < 0:
+        median += 1
+
+    sd = np.sqrt((1-p)*r)/p
+    print(median)
+    print(sd)
 
     def sampling_distr(x,p_): return np.random.negative_binomial(r, p_, x)
 
@@ -74,14 +79,14 @@ def simulation_CCC_charts():
                             [lambda x: RunsRules.n_points_above_CL(x, 9, median),
                              lambda x: RunsRules.n_points_below_CL(x, 9, median),
                              lambda x: RunsRules.lower_CL_rule(x, sim.LCL)],
-                            max(0, median-8*sd), median+8*sd)
+                            max(0, median-3*sd), median+4*sd)
 
     out = []
     for i in range(1000):
         out.append(sim.simulate_run_length(changepoint, lambda x: sampling_distr(x, p_tilde)))
 
     density = stats.gaussian_kde(out)
-    x = np.linspace(0, median, 10*median)
+    x = np.linspace(0, 2000, 5000)
 
     plt.plot(x, density(x))
     plt.show()
