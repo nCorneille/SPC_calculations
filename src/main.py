@@ -31,6 +31,8 @@ def main():
     print("no RR ARL: {}".format(test_model.calculate_ARL(3)))
     print("CCC model no trends: {}".format(CCC_model.calculate_ARL(3)))
 
+    # using properties of test_simulation inside the definition of test_simulation is allowed because of
+    # pass by reference lambda body magic (in Python it is safe to assume objects behave like pointers)
     test_simulation = SimulationHandler([lambda x: double_sided_CI_rule(x, test_simulation.LCL, test_simulation.UCL)],
                                         -3, 3)
 
