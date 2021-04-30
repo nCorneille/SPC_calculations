@@ -1,4 +1,5 @@
 import os
+import timeit
 
 from scipy import stats
 
@@ -33,15 +34,27 @@ def main():
 
     # using properties of test_simulation inside the definition of test_simulation is allowed because of
     # pass by reference lambda body magic (in Python it is safe to assume objects behave like pointers)
-    test_simulation = SimulationHandler([lambda x: double_sided_CI_rule(x, test_simulation.LCL, test_simulation.UCL)],
+    test_simulation = SimulationHandler(lambda x: np.random.normal(0, 1, x), [lambda x: double_sided_CI_rule(x, test_simulation.LCL, test_simulation.UCL)],
                                         -3, 3)
 
     n = []
     for i in range(20000):
-        n.append(test_simulation.simulate(lambda x: np.random.normal(0, 1, x), 10000))
+        n.append(test_simulation.simulate(10000))
 
     print(np.mean(n))
 
 
+def runs_rule_test():
+    n = 1000000
+    m = 10
+    for _ in range(m):
+        data: np.array(float) = np.random.normal(0, 1, n)
+
+        n_u = n_points_above_CL(data, 9, 0.5)
+        n_l = n_points_below_CL(data, 9, -0.5)
+
+        return min(n_u, n_l)
+
+
 if __name__ == "__main__":
-    main()
+    print(timeit.timeit(runs_rule_test, number = 100))
