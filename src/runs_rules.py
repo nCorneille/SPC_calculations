@@ -97,6 +97,6 @@ class RunsRules:
     @staticmethod
     def n_points_decreasing(data: np.array(float), n: int):
         diff = np.diff(data)
-        return RunsRules.get_first_sequence(diff > 0, n - 1) + n
+        return RunsRules.get_first_sequence(diff < 0, n - 1) + n
 
 
