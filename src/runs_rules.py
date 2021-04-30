@@ -88,5 +88,15 @@ class RunsRules:
         """
         return RunsRules.get_first_sequence(data < CL, n) + n
 
+    # TODO: check n_points_increasing and n_points_decreasing for correctness
+    @staticmethod
+    def n_points_increasing(data: np.array(float), n: int):
+        diff = np.diff(data)
+        return RunsRules.get_first_sequence(diff > 0, n - 1) + n
 
-#TODO: increasing sequence; n_points_suffice_condition(np.diff...) + 1 ?
+    @staticmethod
+    def n_points_decreasing(data: np.array(float), n: int):
+        diff = np.diff(data)
+        return RunsRules.get_first_sequence(diff > 0, n - 1) + n
+
+
