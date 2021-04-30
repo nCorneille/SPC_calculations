@@ -1,6 +1,8 @@
 import os
 import timeit
 
+import matplotlib.pyplot as plt
+
 from scipy import stats
 
 from src.simulation_handler import *
@@ -32,29 +34,59 @@ def main():
     print("no RR ARL: {}".format(test_model.calculate_ARL(3)))
     print("CCC model no trends: {}".format(CCC_model.calculate_ARL(3)))
 
-    # using properties of test_simulation inside the definition of test_simulation is allowed because of
+    # using properties of test_sim inside the definition of test_sim is allowed because of
     # pass by reference lambda body magic (in Python it is safe to assume objects behave like pointers)
-    test_simulation = SimulationHandler(lambda x: np.random.normal(0, 1, x), [lambda x: double_sided_CI_rule(x, test_simulation.LCL, test_simulation.UCL)],
-                                        -3, 3)
+    test_sim = SimulationHandler(lambda x: np.random.normal(0, 1, x),
+                                 [lambda x: RunsRules.double_sided_CI_rule(x, test_sim.LCL, test_sim.UCL)],
+                                 -3, 3)
 
     n = []
     for i in range(20000):
-        n.append(test_simulation.simulate(10000))
+        n.append(test_sim.simulate_run_length(10000))
 
     print(np.mean(n))
 
 
 def runs_rule_test():
     n = 1000000
-    m = 10
+    m = 1
     for _ in range(m):
         data: np.array(float) = np.random.normal(0, 1, n)
 
-        n_u = n_points_above_CL(data, 9, 0.5)
-        n_l = n_points_below_CL(data, 9, -0.5)
+        n_u = RunsRules.n_points_above_CL(data, 9, 0.5)
+        n_l = RunsRules.n_points_below_CL(data, 9, -0.5)
 
         return min(n_u, n_l)
 
 
+def simulation_CCC_charts():
+    r = 2
+    p = 0.05
+    p_tilde = 0.06
+    changepoint = -1
+
+    median = 14
+    sd = np.sqrt(p*r)/(1-p)
+
+    def sampling_distr(x,p_): return np.random.negative_binomial(r, p_, x)
+
+    sim = SimulationHandler(lambda x: sampling_distr(x, p),
+                            [lambda x: RunsRules.n_points_above_CL(x, 9, median),
+                             lambda x: RunsRules.n_points_below_CL(x, 9, median),
+                             lambda x: RunsRules.lower_CL_rule(x, sim.LCL)],
+                            max(0, median-8*sd), median+8*sd)
+
+    out = []
+    for i in range(1000):
+        out.append(sim.simulate_run_length(changepoint, lambda x: sampling_distr(x, p_tilde)))
+
+    density = stats.gaussian_kde(out)
+    x = np.linspace(0, median, 10*median)
+
+    plt.plot(x, density(x))
+    plt.show()
+
+
 if __name__ == "__main__":
-    print(timeit.timeit(runs_rule_test, number = 100))
+    #print(timeit.timeit(runs_rule_test, number=1))
+    simulation_CCC_charts()
