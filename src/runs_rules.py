@@ -74,9 +74,10 @@ class RunsRules:
         :param data: Set of observations
         :param n: number of points
         :param CL: Center line
-        :return: first index for which data[index-6:index] are all >CL
+        :return: first index for which data[index-n:index] are all >CL
         """
-        return RunsRules.get_first_sequence(data > CL, n) + n
+        out = RunsRules.get_first_sequence(data > CL, n)
+        return out + (0 if out == len(data) else n)
 
     @staticmethod
     def n_points_below_CL(data: np.array(float), n: int, CL: float):
@@ -84,19 +85,22 @@ class RunsRules:
         :param data: Set of observations
         :param n: number of points
         :param CL: Center line
-        :return: first index for which data[index-6:index] are all <CL
+        :return: first index for which data[index-n:index] are all <CL
         """
-        return RunsRules.get_first_sequence(data < CL, n) + n
+        out = RunsRules.get_first_sequence(data < CL, n)
+        return out + (0 if out == len(data) else n)
 
     # TODO: check n_points_increasing and n_points_decreasing for correctness
     @staticmethod
     def n_points_increasing(data: np.array(float), n: int):
         diff = np.diff(data)
-        return RunsRules.get_first_sequence(diff > 0, n - 1) + n
+        out = RunsRules.get_first_sequence(diff > 0, n - 1)
+        return out + (1 if out == len(diff) else n)
 
     @staticmethod
     def n_points_decreasing(data: np.array(float), n: int):
         diff = np.diff(data)
-        return RunsRules.get_first_sequence(diff < 0, n - 1) + n
+        out = RunsRules.get_first_sequence(diff < 0, n - 1)
+        return out + (1 if out == len(diff) else n)
 
 
