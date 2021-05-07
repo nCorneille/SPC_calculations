@@ -23,7 +23,7 @@ class SimulationHandler:
         self.stopping_rules = stopping_rules
 
     def simulate_run_length(self, changepoint: int = -1, changepoint_distribution = lambda x: x,
-                            max_iterations: int = 10000):
+                            max_iterations: int = 1000, LCL=0):
         """
         Samples max_iterations points from sampling_distribution and returns
         the minimum index for which an OC signal is given.
@@ -41,6 +41,29 @@ class SimulationHandler:
         n = []
 
         for rule in self.stopping_rules:
+            n.append(rule(data))
+
+        return np.min(n) + 1
+
+    def simulate_run_length_variable_rules(self, stopping_rules, changepoint: int = -1, changepoint_distribution = lambda x: x,
+                                           max_iterations: int = 1000, LCL=0):
+        """
+        Samples max_iterations points from sampling_distribution and returns
+        the minimum index for which an OC signal is given.
+
+        :param max_iterations: the maximum number of iterations
+        :return: the index which gives an OC signal + 1
+        """
+        if changepoint == -1:
+            data: np.array(float) = self.sampling_distribution(max_iterations)
+        else:
+            changed_data = changepoint_distribution(max_iterations - changepoint)
+            sample_data = self.sampling_distribution(changepoint)
+            data = np.concatenate((sample_data, changed_data))
+
+        n = []
+
+        for rule in stopping_rules:
             n.append(rule(data))
 
         return np.min(n) + 1

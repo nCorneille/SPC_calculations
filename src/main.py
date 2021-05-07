@@ -4,6 +4,7 @@ import timeit
 import matplotlib.pyplot as plt
 
 from scipy import stats
+from scipy import optimize
 
 from src.simulation_handler import *
 from src.matrix_handler import MarkovChainModel
@@ -70,28 +71,42 @@ def simulation_CCC_charts():
         median += 1
 
     sd = np.sqrt((1-p)*r)/p
-    print(median)
-    print(sd)
+    #print(median)
+    #print(sd)
 
     def sampling_distr(x,p_): return np.random.negative_binomial(r, p_, x)
 
+    LCL = max(0, median - 2 * sd)
     sim = SimulationHandler(lambda x: sampling_distr(x, p),
                             [lambda x: RunsRules.n_points_above_CL(x, 9, median),
                              lambda x: RunsRules.n_points_below_CL(x, 9, median),
                              lambda x: RunsRules.n_points_increasing(x, 6),
                              lambda x: RunsRules.n_points_decreasing(x, 6),
-                             lambda x: RunsRules.lower_CL_rule(x, sim.LCL)],
-                            LCL=max(0, median-2*sd))
+                             lambda x: RunsRules.lower_CL_rule(x, LCL)])
 
-    out = []
-    for i in range(1000):
-        out.append(sim.simulate_run_length(changepoint, lambda x: sampling_distr(x, p_tilde)))
 
-    density = stats.gaussian_kde(out)
-    x = np.linspace(0, 2000, 5000)
+    def simulate(_LCL):
+        out = []
+        for i in range(1000):
+            out.append(sim.simulate_run_length_variable_rules([lambda x: RunsRules.n_points_above_CL(x, 9, median),
+                                                               lambda x: RunsRules.n_points_below_CL(x, 9, median),
+                                                               lambda x: RunsRules.n_points_increasing(x, 6),
+                                                               lambda x: RunsRules.n_points_decreasing(x, 6),
+                                                               lambda x: RunsRules.lower_CL_rule(x, _LCL)],
+                                                              changepoint, lambda x: sampling_distr(x, p_tilde)))
+        return np.mean(np.array(out))
 
-    plt.plot(x, density(x))
-    plt.show()
+    print(simulate(LCL))
+    output = optimize.root_scalar(lambda k: simulate(median - k * sd) - 230,
+                         bracket=[0, 3], x0=1.5, xtol=0.01)
+
+    print(output.root)
+    print(simulate(output.root))
+    #density = stats.gaussian_kde(out)
+    #x = np.linspace(0, 2000, 5000)
+
+    #plt.plot(x, density(x))
+    #plt.show()
 
 
 if __name__ == "__main__":
