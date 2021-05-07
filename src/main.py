@@ -78,8 +78,10 @@ def simulation_CCC_charts():
     sim = SimulationHandler(lambda x: sampling_distr(x, p),
                             [lambda x: RunsRules.n_points_above_CL(x, 9, median),
                              lambda x: RunsRules.n_points_below_CL(x, 9, median),
+                             lambda x: RunsRules.n_points_increasing(x, 6),
+                             lambda x: RunsRules.n_points_decreasing(x, 6),
                              lambda x: RunsRules.lower_CL_rule(x, sim.LCL)],
-                            max(0, median-3*sd), median+4*sd)
+                            LCL=max(0, median-2*sd))
 
     out = []
     for i in range(1000):
