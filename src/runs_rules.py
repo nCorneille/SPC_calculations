@@ -90,7 +90,6 @@ class RunsRules:
         out = RunsRules.get_first_sequence(data < CL, n)
         return out + (0 if out == len(data) else n)
 
-    # TODO: check n_points_increasing and n_points_decreasing for correctness
     @staticmethod
     def n_points_increasing(data: np.array(float), n: int):
         diff = np.diff(data)
